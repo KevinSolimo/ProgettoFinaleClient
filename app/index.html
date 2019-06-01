@@ -1,0 +1,49 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js">
+
+</script>
+<script>
+	const QRID = '45';
+
+    var id_Utente;
+
+    var date;
+
+	const socket = io('https://8000-b170ea1e-2add-4b1e-8ece-21677fc9fc8e.ws-eu0.gitpod.io');
+
+    socket.on('connect', () => {
+
+        var myVar;
+
+
+        socket.on('broken', (QR) => {
+             if(QR.QR == QRID){
+                 console.error("Mi sono Rotto!");
+             }
+        })
+
+        socket.on('unlock', (data) => {
+            if(data.QR == QRID){
+                console.error("Mi Sblocco");
+                id_Utente = data.id_Utente;
+                date = data.date;
+                myVar = setInterval(() => {
+                    navigator.geolocation.getCurrentPosition((position) => {
+                        console.log(position.coords);
+                        socket.emit('position', {QR : QRID, date: date ,id_Utente : id_Utente, position: { latitude : position.coords.latitude , longitude : position.coords.longitude } } );
+                    });
+
+                },  180 * 1000);
+            }
+        });
+
+        socket.on('lock', (QR) => {
+            if(QR.QR == QRID){
+                console.error("Mi Blocco");
+                clearInterval(myVar);
+            }
+        });
+
+    });
+
+</script>
+<h1 onclick="socket.emit('fixed', {QR : QRID} );console.log(QRID)">Riparato</h1>
